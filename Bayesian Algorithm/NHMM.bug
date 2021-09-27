@@ -1,0 +1,48 @@
+model{
+  #prioris para a Matriz de betas
+  
+  for (i in 1:K){
+    for (j in 2:K){
+      for (d in 1:D){
+        Beta[j,d,i] ~ dnorm(0, .0001)
+      }
+    }
+  }
+  
+  #prioris para as probabilidades inicias dos estados ocultos 
+  #prioris para as probabilidades de sucesso relacionadas a cada estado oculto
+  
+  for (i in 1:K){
+    theta[i] ~ dbeta(1,1)
+    pinit[i]~dbeta(1,1)
+  }
+  
+  #definição do Modelo
+  S[1] ~ dcat(pinit)
+  y[1] ~ dbinom(theta[S[1]], N)
+  
+  for (j in 2:T){ 
+      eta[1,j]<-1
+      for (i in 2:K){
+       eta[i,j]<-exp(Beta[i,,S[j-1]]%*%x[j,])
+      }
+      rho[j] = sum(eta[,j])
+      
+      for (i in 1:K){
+       p[i,j]<-(eta[i,j])/(rho[j])
+      }
+      
+      # eta[2,j]<-exp(Beta[2,1,S[j-1]]*x[j,1] + Beta[2,2,S[j-1]]*x[j,2] + Beta[2,3,S[j-1]]*x[j,3])
+      # eta[3,j]<-exp(Beta[3,1,S[j-1]]*x[j,1] + Beta[3,2,S[j-1]]*x[j,2] + Beta[3,3,S[j-1]]*x[j,3])
+      
+      # rho[j]=eta[1,j]+eta[2,j]+eta[3,j]
+      
+      # p[1,j] <- (eta[1,j])/(rho[j])
+      # p[2,j] <- (eta[2,j])/(rho[j])
+      # p[3,j] <- (eta[3,j])/(rho[j])
+      
+      S[j]~dcat(p[,j])
+      y[j]~dbinom(theta[S[j]], N) 
+  }
+  
+}
